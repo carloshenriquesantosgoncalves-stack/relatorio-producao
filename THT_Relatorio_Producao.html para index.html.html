@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THT — Relatório de Produção</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{--green:#1a3a2a;--green-mid:#2d5e40;--green-light:#4a9463;--gold:#c8a84b;--gold-light:#e8c96b;--cream:#f7f4ed;--cream-dark:#ede9df;--white:#ffffff;--text:#1a1a1a;--text-muted:#6b6b5a;--border:rgba(26,58,42,0.12);--shadow:0 4px 24px rgba(26,58,42,0.10);--radius:16px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text);min-height:100vh}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:240px;background:var(--green);display:flex;flex-direction:column;z-index:100}
+.sidebar-brand{padding:32px 28px 24px;border-bottom:1px solid rgba(255,255,255,0.08)}
+.brand-logo{font-family:'DM Serif Display',serif;font-size:30px;color:var(--gold-light);letter-spacing:-0.5px;line-height:1}
+.brand-sub{font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:2px;margin-top:5px}
+.sidebar-nav{flex:1;padding:20px 14px;overflow-y:auto}
+.nav-group{font-size:10px;color:rgba(255,255,255,0.28);text-transform:uppercase;letter-spacing:1.5px;padding:0 10px;margin:18px 0 6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;cursor:pointer;transition:all 0.2s;color:rgba(255,255,255,0.5);font-size:13px;margin-bottom:1px}
+.nav-item:hover{background:rgba(255,255,255,0.07);color:#fff}
+.nav-item.active{background:var(--gold);color:var(--green);font-weight:600}
+.nav-icon{font-size:15px;width:20px;text-align:center}
+.sidebar-foot{padding:16px 14px;border-top:1px solid rgba(255,255,255,0.07);font-size:11px;color:rgba(255,255,255,0.25)}
+.main{margin-left:240px;min-height:100vh}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 36px;height:62px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar-left h1{font-size:16px;font-weight:600;color:var(--text)}
+.topbar-left p{font-size:11.5px;color:var(--text-muted);margin-top:1px}
+.topbar-right{display:flex;gap:8px;align-items:center}
+.btn{padding:7px 16px;border-radius:9px;font-size:12.5px;font-family:'DM Sans',sans-serif;cursor:pointer;font-weight:500;transition:all 0.2s;border:1.5px solid transparent}
+.btn-outline{background:transparent;border-color:var(--border);color:var(--text-muted)}
+.btn-outline:hover{border-color:var(--green-mid);color:var(--green)}
+.btn-primary{background:var(--green);color:#fff;border-color:var(--green)}
+.btn-primary:hover{background:var(--green-mid)}
+.btn-gold{background:var(--gold);color:var(--green);border-color:var(--gold)}
+.btn-gold:hover{background:var(--gold-light)}
+.page{display:none;padding:32px 36px;animation:fadeUp 0.35s ease}
+.page.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.hero{background:linear-gradient(135deg,var(--green) 0%,#2d6a3f 70%,#1e5235 100%);border-radius:var(--radius);padding:32px 36px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px}
+.hero h1{font-family:'DM Serif Display',serif;font-size:30px;color:#fff;line-height:1.1}
+.hero h1 em{color:var(--gold-light);font-style:normal}
+.hero p{font-size:13px;color:rgba(255,255,255,0.55);margin-top:5px}
+.hero-stats{display:flex;gap:36px;flex-shrink:0}
+.hstat .v{font-size:26px;font-weight:600;color:var(--gold-light)}
+.hstat .l{font-size:10px;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:24px}
+.kpi{background:var(--white);border-radius:var(--radius);padding:20px;border:1px solid var(--border);position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--gold)}
+.kpi.accent::before{background:var(--green-light)}
+.kpi-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.9px;color:var(--text-muted);margin-bottom:8px}
+.kpi-value{font-size:26px;font-weight:600;color:var(--text);line-height:1}
+.kpi-unit{font-size:13px;font-weight:400;color:var(--text-muted)}
+.kpi-sub{font-size:11.5px;color:var(--text-muted);margin-top:5px}
+.kpi-tag{display:inline-block;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:20px;margin-top:4px;background:#e8f5e9;color:#166534}
+.kpi-tag.down{background:#fee2e2;color:#991b1b}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+.g1{display:grid;grid-template-columns:1fr;gap:18px;margin-bottom:18px}
+.card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);padding:22px}
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;gap:10px;flex-wrap:wrap}
+.card-title{font-size:13.5px;font-weight:600;color:var(--text)}
+.card-sub{font-size:11.5px;color:var(--text-muted);margin-top:2px}
+.filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+select.chip{font-family:'DM Sans',sans-serif;font-size:12px;padding:5px 10px;border-radius:8px;border:1.5px solid var(--border);background:var(--cream);color:var(--text);cursor:pointer;appearance:none;-webkit-appearance:none}
+select.chip:focus{outline:none;border-color:var(--green-light)}
+.legend-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;font-size:11.5px;color:var(--text-muted)}
+.leg-item{display:flex;align-items:center;gap:5px}
+.leg-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.cw{position:relative;width:100%}
+.ph{font-size:12px;color:var(--text-muted);text-align:center;padding:40px 0}
+.page-head{margin-bottom:24px}
+.page-head h2{font-family:'DM Serif Display',serif;font-size:24px;color:var(--green)}
+.page-head p{font-size:12.5px;color:var(--text-muted);margin-top:3px}
+.tcard{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden}
+.ttoolbar{padding:14px 18px;display:flex;gap:10px;align-items:center;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.tscroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{text-align:left;padding:11px 15px;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--text-muted);background:var(--cream);border-bottom:1px solid var(--border);white-space:nowrap}
+tbody td{padding:10px 15px;border-bottom:1px solid rgba(0,0,0,0.04);color:var(--text);vertical-align:middle}
+tbody tr:hover{background:var(--cream)}
+tbody tr:last-child td{border-bottom:none}
+.badge{display:inline-flex;font-size:11px;font-weight:600;padding:3px 8px;border-radius:20px}
+.b-tommy{background:#e8f0fe;color:#1a56db}
+.b-palmer{background:#fef3e8;color:#c05621}
+.b-ataulfo{background:#fef9e8;color:#92400e}
+.b-keitt{background:#e8fef0;color:#166534}
+.b-kent{background:#f3e8fe;color:#6b21a8}
+.b-mkt{background:var(--cream-dark);color:var(--text-muted)}
+.del-btn{background:none;border:none;color:#dc2626;cursor:pointer;font-size:15px;padding:2px 6px;border-radius:6px;transition:background .15s}
+.del-btn:hover{background:#fee2e2}
+.fcard{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);padding:26px;margin-bottom:20px}
+.fcard h3{font-size:14px;font-weight:600;margin-bottom:18px;color:var(--text)}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--text-muted)}
+.field input,.field select{font-family:'DM Sans',sans-serif;font-size:13px;padding:8px 11px;border-radius:9px;border:1.5px solid var(--border);background:var(--cream);color:var(--text);transition:border .2s}
+.field input:focus,.field select:focus{outline:none;border-color:var(--green-light);background:#fff}
+.faction{display:flex;gap:10px;margin-top:18px;align-items:center;flex-wrap:wrap}
+.msg{font-size:12.5px;padding:7px 13px;border-radius:8px;display:none}
+.msg.ok{background:#e8f5e9;color:#166534;display:block}
+.msg.err{background:#fee2e2;color:#991b1b;display:block}
+textarea{font-family:monospace;font-size:12px;padding:11px;border:1.5px solid var(--border);border-radius:10px;background:var(--cream);resize:vertical;width:100%;transition:border .2s}
+textarea:focus{outline:none;border-color:var(--green-light);background:#fff}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(26,58,42,0.15);border-radius:10px}
+@media(max-width:860px){.sidebar{width:56px}.sidebar-brand,.nav-group,.nav-item span,.brand-sub,.sidebar-foot{display:none}.nav-icon{margin:auto}.nav-item{justify-content:center;padding:12px 0}.main{margin-left:56px}.topbar{padding:0 18px}.page{padding:18px}.g2,.kpi-grid{grid-template-columns:1fr}.hero-stats{display:none}}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-logo">THT</div>
+    <div class="brand-sub">Produção · Safra</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-group">Principal</div>
+    <div class="nav-item active" onclick="goPage('overview',this)"><span class="nav-icon">📊</span><span>Visão Geral</span></div>
+    <div class="nav-group">Análises</div>
+    <div class="nav-item" onclick="goPage('mensal',this)"><span class="nav-icon">📅</span><span>Por Mês</span></div>
+    <div class="nav-item" onclick="goPage('anual',this)"><span class="nav-icon">📈</span><span>Por Ano</span></div>
+    <div class="nav-item" onclick="goPage('variedade',this)"><span class="nav-icon">🥭</span><span>Por Variedade</span></div>
+    <div class="nav-item" onclick="goPage('mercado',this)"><span class="nav-icon">🌍</span><span>Por Mercado</span></div>
+    <div class="nav-group">Dados</div>
+    <div class="nav-item" onclick="goPage('dados',this)"><span class="nav-icon">✏️</span><span>Inserir / Editar</span></div>
+    <div class="nav-item" onclick="goPage('tabela',this)"><span class="nav-icon">📋</span><span>Registros</span></div>
+  </nav>
+  <div class="sidebar-foot">THT © 2026</div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1 id="topbar-title">Visão Geral</h1>
+      <p id="topbar-sub">Relatório de Produção THT · 2023–2026</p>
+    </div>
+    <div class="topbar-right">
+      <span id="topbar-count" style="font-size:12px;color:#aaa"></span>
+      <button class="btn btn-outline" onclick="exportCSV()">⬇ Exportar CSV</button>
+    </div>
+  </div>
+
+  <!-- OVERVIEW -->
+  <section class="page active" id="page-overview">
+    <div class="hero">
+      <div><h1>Produção <em>THT</em></h1><p>Tratamento Hidrotérmico · Safras 2023–2026</p></div>
+      <div class="hero-stats">
+        <div class="hstat"><div class="v" id="ov-total">—</div><div class="l">Total kg</div></div>
+        <div class="hstat"><div class="v" id="ov-reg">—</div><div class="l">Registros</div></div>
+        <div class="hstat"><div class="v">5</div><div class="l">Mercados</div></div>
+        <div class="hstat"><div class="v">5</div><div class="l">Variedades</div></div>
+      </div>
+    </div>
+    <div class="kpi-grid" id="ov-kpis"></div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Produção por Safra</div><div class="card-sub">Volume total em kg</div></div></div>
+        <div class="cw" style="height:230px"><canvas id="c-ov-ano" aria-label="Produção anual"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Mix por Variedade</div><div class="card-sub">Composição acumulada</div></div></div>
+        <div class="cw" style="height:230px"><canvas id="c-ov-var" aria-label="Variedade"></canvas></div>
+      </div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Distribuição por Mercado</div><div class="card-sub">Volume acumulado</div></div></div>
+        <div class="cw" style="height:210px"><canvas id="c-ov-merc" aria-label="Mercado"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Sazonalidade Histórica</div><div class="card-sub">Volume por mês (todos os anos)</div></div></div>
+        <div class="cw" style="height:210px"><canvas id="c-ov-saz" aria-label="Sazonalidade"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MENSAL -->
+  <section class="page" id="page-mensal">
+    <div class="page-head"><h2>Análise Mensal</h2><p>Evolução da produção mês a mês com comparativo entre safras</p></div>
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-head">
+        <div><div class="card-title">Produção Mensal (kg)</div></div>
+        <div class="filters">
+          <select class="chip" id="f-mes-ano" onchange="renderMensal()"><option value="">Todos os anos</option></select>
+          <select class="chip" id="f-mes-var" onchange="renderMensal()"><option value="">Todas as variedades</option></select>
+          <select class="chip" id="f-mes-merc" onchange="renderMensal()"><option value="">Todos os mercados</option></select>
+        </div>
+      </div>
+      <div class="legend-row" id="leg-mensal"></div>
+      <div class="cw" style="height:290px"><canvas id="c-mensal" aria-label="Mensal"></canvas></div>
+    </div>
+    <div class="kpi-grid" id="kpi-mensal"></div>
+  </section>
+
+  <!-- ANUAL -->
+  <section class="page" id="page-anual">
+    <div class="page-head"><h2>Comparativo Anual</h2><p>Desempenho por safra e composição de variedades</p></div>
+    <div class="kpi-grid" id="kpi-anual"></div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-head">
+          <div><div class="card-title">Volume por Safra</div></div>
+          <select class="chip" id="f-ano-var2" onchange="renderAnual()"><option value="">Todas as variedades</option></select>
+        </div>
+        <div class="cw" style="height:260px"><canvas id="c-anual-bar" aria-label="Anual"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Composição por Variedade</div><div class="card-sub">Abertura por safra</div></div></div>
+        <div class="legend-row" id="leg-anual"></div>
+        <div class="cw" style="height:260px"><canvas id="c-anual-stack" aria-label="Anual stack"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VARIEDADE -->
+  <section class="page" id="page-variedade">
+    <div class="page-head"><h2>Por Variedade</h2><p>Ranking, participação e evolução por safra</p></div>
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-head">
+        <div><div class="card-title">Ranking de Variedades</div></div>
+        <div class="filters">
+          <select class="chip" id="f-var-ano" onchange="renderVar()"><option value="">Todos os anos</option></select>
+          <select class="chip" id="f-var-merc" onchange="renderVar()"><option value="">Todos os mercados</option></select>
+        </div>
+      </div>
+      <div class="cw" style="height:210px"><canvas id="c-var" aria-label="Variedade rank"></canvas></div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Participação %</div></div></div>
+        <div class="cw" style="height:250px"><canvas id="c-var-donut" aria-label="Variedade donut"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Evolução por Safra</div></div></div>
+        <div class="cw" style="height:250px"><canvas id="c-var-evol" aria-label="Variedade evolução"></canvas></div>
+      </div>
+    </div>
+    <div class="kpi-grid" id="kpi-var"></div>
+  </section>
+
+  <!-- MERCADO -->
+  <section class="page" id="page-mercado">
+    <div class="page-head"><h2>Por Mercado</h2><p>Destinos de exportação e volume embarcado</p></div>
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-head">
+        <div><div class="card-title">Volume por Mercado</div></div>
+        <div class="filters">
+          <select class="chip" id="f-merc-ano" onchange="renderMerc()"><option value="">Todos os anos</option></select>
+          <select class="chip" id="f-merc-var2" onchange="renderMerc()"><option value="">Todas as variedades</option></select>
+        </div>
+      </div>
+      <div class="cw" style="height:220px"><canvas id="c-merc" aria-label="Mercado"></canvas></div>
+    </div>
+    <div class="g2">
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Comparativo Anual por Mercado</div></div></div>
+        <div class="legend-row" id="leg-merc"></div>
+        <div class="cw" style="height:250px"><canvas id="c-merc-anual" aria-label="Mercado anual"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Participação por Mercado</div></div></div>
+        <div class="cw" style="height:250px"><canvas id="c-merc-donut" aria-label="Mercado donut"></canvas></div>
+      </div>
+    </div>
+    <div class="kpi-grid" id="kpi-merc"></div>
+  </section>
+
+  <!-- DADOS -->
+  <section class="page" id="page-dados">
+    <div class="page-head"><h2>Inserir Dados</h2><p>Adicione registros individuais ou importe em lote via CSV</p></div>
+    <div class="fcard">
+      <h3>Novo Registro</h3>
+      <div class="fgrid">
+        <div class="field"><label>Data</label><input type="date" id="in-data"></div>
+        <div class="field"><label>Variedade</label>
+          <select id="in-var">
+            <option value="TOMMY">Tommy</option><option value="PALMER">Palmer</option>
+            <option value="ATAULFO">Ataulfo</option><option value="KEITT">Keitt</option>
+            <option value="KENT">Kent</option><option value="__c">+ Nova variedade</option>
+          </select>
+        </div>
+        <div class="field" id="fvc" style="display:none"><label>Nova variedade</label><input type="text" id="in-var-c" placeholder="Nome"></div>
+        <div class="field"><label>Mercado</label>
+          <select id="in-merc">
+            <option value="ARGENTINA">Argentina</option><option value="CHILE">Chile</option>
+            <option value="ESTADOS UNIDOS">Estados Unidos</option><option value="AFRICA DO SUL">África do Sul</option>
+            <option value="URUGUAI">Uruguai</option><option value="__c">+ Novo mercado</option>
+          </select>
+        </div>
+        <div class="field" id="fmc" style="display:none"><label>Novo mercado</label><input type="text" id="in-merc-c" placeholder="Nome"></div>
+        <div class="field"><label>Peso (kg)</label><input type="number" id="in-peso" placeholder="ex: 19800" min="1"></div>
+        <div class="field"><label>Contentores</label><input type="number" id="in-cont" placeholder="ex: 900" min="0"></div>
+        <div class="field"><label>Gaiolas</label><input type="number" id="in-gaio" placeholder="ex: 15" min="0"></div>
+        <div class="field"><label>Q. Trat.</label><input type="number" id="in-qtrat" placeholder="ex: 5" min="0"></div>
+      </div>
+      <div class="faction">
+        <button class="btn btn-primary" onclick="addRecord()">+ Adicionar</button>
+        <button class="btn btn-outline" onclick="clearForm()">Limpar</button>
+        <span class="msg" id="form-msg"></span>
+      </div>
+    </div>
+    <div class="fcard">
+      <h3>Importar em Lote (CSV)</h3>
+      <p style="font-size:12.5px;color:var(--text-muted);margin-bottom:12px">Formato: <code style="background:var(--cream);padding:2px 7px;border-radius:5px;font-size:11.5px">data,variedade,mercado,peso,contentores,gaiolas,qtrat</code></p>
+      <textarea id="csv-input" rows="5" placeholder="2025-06-15,TOMMY,ARGENTINA,19800,900,15,5&#10;2025-06-16,PALMER,CHILE,7920,360,6,2"></textarea>
+      <div class="faction">
+        <button class="btn btn-gold" onclick="importCSV()">Importar CSV</button>
+        <span class="msg" id="csv-msg"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- TABELA -->
+  <section class="page" id="page-tabela">
+    <div class="page-head"><h2>Todos os Registros</h2><p id="tab-info">—</p></div>
+    <div class="tcard">
+      <div class="ttoolbar">
+        <input id="tab-search" type="text" placeholder="Buscar..." onkeyup="renderTabela()" style="padding:6px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:12.5px;font-family:'DM Sans',sans-serif;background:var(--cream);width:180px">
+        <select class="chip" id="f-tab-ano" onchange="renderTabela()"><option value="">Todos os anos</option></select>
+        <select class="chip" id="f-tab-var" onchange="renderTabela()"><option value="">Todas as variedades</option></select>
+        <select class="chip" id="f-tab-merc" onchange="renderTabela()"><option value="">Todos os mercados</option></select>
+        <button class="btn btn-outline" style="margin-left:auto;border-color:#dc2626;color:#dc2626" onclick="if(confirm('Limpar TODOS os dados?')){DB=[];save();boot()}">🗑 Limpar tudo</button>
+      </div>
+      <div class="tscroll">
+        <table><thead><tr><th>Data</th><th>Variedade</th><th>Mercado</th><th>Peso (kg)</th><th>Contentores</th><th>Gaiolas</th><th>Q.Trat</th><th></th></tr></thead>
+        <tbody id="tab-body"></tbody></table>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+const MESES=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const VC={TOMMY:'#1a56db',PALMER:'#d97706',ATAULFO:'#b45309',KEITT:'#166534',KENT:'#6b21a8'};
+const MC={ARGENTINA:'#1a3a2a',CHILE:'#c8a84b','ESTADOS UNIDOS':'#2d5e40','AFRICA DO SUL':'#7c3d12',URUGUAI:'#4a9463'};
+const YC=['#1a3a2a','#4a9463','#c8a84b','#d97706'];
+
+const SEED=[{"data":"2023-02-08","mercado":"ARGENTINA","variedade":"PALMER","peso":19800,"contentores":900,"gaiola":15,"qtrat":5,"ano":2023,"mes":2},{"data":"2023-02-09","mercado":"ARGENTINA","variedade":"PALMER","peso":11286,"contentores":513,"gaiola":9,"qtrat":3,"ano":2023,"mes":2},{"data":"2023-02-22","mercado":"ARGENTINA","variedade":"TOMMY","peso":22286,"contentores":1013,"gaiola":18,"qtrat":6,"ano":2023,"mes":2},{"data":"2023-02-23","mercado":"ARGENTINA","variedade":"TOMMY","peso":7920,"contentores":360,"gaiola":6,"qtrat":2,"ano":2023,"mes":2},{"data":"2023-02-24","mercado":"ARGENTINA","variedade":"TOMMY","peso":42834,"contentores":1947,"gaiola":33,"qtrat":11,"ano":2023,"mes":2},{"data":"2023-03-03","mercado":"ARGENTINA","variedade":"TOMMY","peso":29040,"contentores":1320,"gaiola":22,"qtrat":8,"ano":2023,"mes":3},{"data":"2023-03-08","mercado":"ARGENTINA","variedade":"TOMMY","peso":23760,"contentores":1080,"gaiola":18,"qtrat":6,"ano":2023,"mes":3},{"data":"2023-03-09","mercado":"ARGENTINA","variedade":"TOMMY","peso":13398,"contentores":609,"gaiola":11,"qtrat":4,"ano":2023,"mes":3},{"data":"2023-03-10","mercado":"ARGENTINA","variedade":"TOMMY","peso":40920,"contentores":1860,"gaiola":31,"qtrat":11,"ano":2023,"mes":3},{"data":"2023-03-10","mercado":"URUGUAI","variedade":"TOMMY","peso":1320,"contentores":60,"gaiola":1,"qtrat":1,"ano":2023,"mes":3},{"data":"2023-03-14","mercado":"ARGENTINA","variedade":"TOMMY","peso":15840,"contentores":720,"gaiola":12,"qtrat":4,"ano":2023,"mes":3},{"data":"2023-03-15","mercado":"ARGENTINA","variedade":"TOMMY","peso":4664,"contentores":212,"gaiola":4,"qtrat":2,"ano":2023,"mes":3},{"data":"2023-03-16","mercado":"ARGENTINA","variedade":"TOMMY","peso":10560,"contentores":480,"gaiola":8,"qtrat":3,"ano":2023,"mes":3},{"data":"2023-03-17","mercado":"ARGENTINA","variedade":"TOMMY","peso":11066,"contentores":503,"gaiola":9,"qtrat":3,"ano":2023,"mes":3},{"data":"2023-03-21","mercado":"ARGENTINA","variedade":"TOMMY","peso":15840,"contentores":720,"gaiola":12,"qtrat":4,"ano":2023,"mes":3},{"data":"2023-03-22","mercado":"ARGENTINA","variedade":"TOMMY","peso":13860,"contentores":630,"gaiola":11,"qtrat":4,"ano":2023,"mes":3},{"data":"2023-04-05","mercado":"ARGENTINA","variedade":"TOMMY","peso":25080,"contentores":1140,"gaiola":19,"qtrat":7,"ano":2023,"mes":4},{"data":"2023-04-05","mercado":"ARGENTINA","variedade":"TOMMY","peso":3960,"contentores":180,"gaiola":3,"qtrat":1,"ano":2023,"mes":4},{"data":"2023-04-11","mercado":"ARGENTINA","variedade":"TOMMY","peso":9790,"contentores":445,"gaiola":8,"qtrat":3,"ano":2023,"mes":4},{"data":"2023-04-13","mercado":"ARGENTINA","variedade":"TOMMY","peso":5280,"contentores":240,"gaiola":4,"qtrat":2,"ano":2023,"mes":4},{"data":"2023-04-13","mercado":"URUGUAI","variedade":"TOMMY","peso":1320,"contentores":60,"gaiola":1,"qtrat":1,"ano":2023,"mes":4},{"data":"2023-04-17","mercado":"ARGENTINA","variedade":"TOMMY","peso":19800,"contentores":900,"gaiola":15,"qtrat":5,"ano":2023,"mes":4},{"data":"2023-04-18","mercado":"ARGENTINA","variedade":"TOMMY","peso":23232,"contentores":1056,"gaiola":18,"qtrat":6,"ano":2023,"mes":4},{"data":"2023-04-19","mercado":"ARGENTINA","variedade":"TOMMY","peso":19800,"contentores":900,"gaiola":15,"qtrat":5,"ano":2023,"mes":4},{"data":"2023-04-25","mercado":"ARGENTINA","variedade":"TOMMY","peso":23760,"contentores":1080,"gaiola":18,"qtrat":6,"ano":2023,"mes":4},{"data":"2023-04-26","mercado":"CHILE","variedade":"TOMMY","peso":5280,"contentores":240,"gaiola":4,"qtrat":2,"ano":2023,"mes":4},{"data":"2023-04-26","mercado":"ARGENTINA","variedade":"TOMMY","peso":2640,"contentores":120,"gaiola":2,"qtrat":1,"ano":2023,"mes":4},{"data":"2023-04-26","mercado":"URUGUAI","variedade":"TOMMY","peso":7920,"contentores":360,"gaiola":6,"qtrat":2,"ano":2023,"mes":4},{"data":"2023-05-02","mercado":"CHILE","variedade":"TOMMY","peso":3960,"contentores":180,"gaiola":3,"qtrat":1,"ano":2023,"mes":5},{"data":"2023-05-03","mercado":"CHILE","variedade":"TOMMY","peso":19800,"contentores":900,"gaiola":15,"qtrat":5,"ano":2023,"mes":5},{"data":"2023-05-04","mercado":"CHILE","variedade":"TOMMY","peso":3960,"contentores":180,"gaiola":3,"qtrat":1,"ano":2023,"mes":5},{"data":"2023-05-04","mercado":"ARGENTINA","variedade":"TOMMY","peso":35640,"contentores":1620,"gaiola":18,"qtrat":9,"ano":2023,"mes":5},{"data":"2023-05-05","mercado":"ARGENTINA","variedade":"TOMMY","peso":15840,"contentores":720,"gaiola":12,"qtrat":4,"ano":2023,"mes":5},{"data":"2023-05-08","mercado":"CHILE","variedade":"TOMMY","peso":7920,"contentores":360,"gaiola":6,"qtrat":2,"ano":2023,"mes":5},{"data":"2023-05-08","mercado":"ARGENTINA","variedade":"TOMMY","peso":11880,"contentores":540,"gaiola":9,"qtrat":3,"ano":2023,"mes":5},{"data":"2023-05-08","mercado":"URUGUAI","variedade":"TOMMY","peso":11880,"contentores":540,"gaiola":9,"qtrat":3,"ano":2023,"mes":5},{"data":"2023-05-09","mercado":"CHILE","variedade":"TOMMY","peso":31680,"contentores":1440,"gaiola":24,"qtrat":8,"ano":2023,"mes":5},{"data":"2023-05-10","mercado":"CHILE","variedade":"TOMMY","peso":27720,"contentores":1260,"gaiola":21,"qtrat":7,"ano":2023,"mes":5},{"data":"2023-05-11","mercado":"ARGENTINA","variedade":"TOMMY","peso":23760,"contentores":1080,"gaiola":12,"qtrat":6,"ano":2023,"mes":5},{"data":"2023-05-12","mercado":"ARGENTINA","variedade":"TOMMY","peso":9240,"contentores":420,"gaiola":7,"qtrat":3,"ano":2023,"mes":5},{"data":"2023-05-15","mercado":"ARGENTINA","variedade":"TOMMY","peso":3960,"contentores":180,"gaiola":3,"qtrat":1,"ano":2023,"mes":5},{"data":"2023-05-15","mercado":"CHILE","variedade":"TOMMY","peso":11880,"contentores":540,"gaiola":9,"qtrat":3,"ano":2023,"mes":5},{"data":"2023-05-16","mercado":"ARGENTINA","variedade":"TOMMY","peso":31680,"contentores":1440,"gaiola":24,"qtrat":8,"ano":2023,"mes":5},{"data":"2023-05-16","mercado":"URUGUAI","variedade":"TOMMY","peso":7040,"contentores":320,"gaiola":6,"qtrat":2,"ano":2023,"mes":5},{"data":"2023-05-17","mercado":"CHILE","variedade":"TOMMY","peso":19800,"contentores":900,"gaiola":15,"qtrat":5,"ano":2023,"mes":5},{"data":"2023-05-17","mercado":"ARGENTINA","variedade":"PALMER","peso":7920,"contentores":360,"gaiola":6,"qtrat":2,"ano":2023,"mes":5},{"data":"2023-05-18","mercado":"CHILE","variedade":"TOMMY","peso":3960,"contentores":180,"gaiola":3,"qtrat":1,"ano":2023,"mes":5},{"data":"2023-05-18","mercado":"ARGENTINA","variedade":"TOMMY","peso":11880,"contentores":540,"gaiola":9,"qtrat":3,"ano":2023,"mes":5},{"data":"2023-05-22","mercado":"CHILE","variedade":"TOMMY","peso":7920,"contentores":360,"gaiola":6,"qtrat":2,"ano":2023,"mes":5},{"data":"2023-05-23","mercado":"CHILE","variedade":"TOMMY","peso":19800,"contentores":900,"gaiola":15,"qtrat":5,"ano":2023,"mes":5},{"data":"2023-05-24","mercado":"CHILE","variedade":"TOMMY","peso":14102,"contentores":641,"gaiola":11,"qtrat":4,"ano":2023,"mes":5},{"data":"2023-05-25","mercado":"CHILE","variedade":"TOMMY","peso":20372,"contentores":926,"gaiola":16,"qtrat":6,"ano":2023,"mes":5},{"data":"2023-05-30","mercado":"CHILE","variedade":"TOMMY","peso":31680,"contentores":1440,"gaiola":24,"qtrat":8,"ano":2023,"mes":5},{"data":"2023-05-30","mercado":"ARGENTINA","variedade":"TOMMY","peso":3806,"contentores":173,"gaiola":3,"qtrat":1,"ano":2023,"mes":5},{"data":"2023-06-01","mercado":"ARGENTINA","variedade":"TOMMY","peso":33660,"contentores":1530,"gaiola":26,"qtrat":9,"ano":2023,"mes":6},{"data":"2023-06-05","mercado":"ARGENTINA","variedade":"TOMMY","peso":3960,"contentores":180,"gaiola":3,"qtrat":1,"ano":2023,"mes":6},{"data":"2023-06-05","mercado":"CHILE","variedade":"TOMMY","peso":20592,"contentores":936,"gaiola":16,"qtrat":6,"ano":2023,"mes":6},{"data":"2023-06-06","mercado":"CHILE","variedade":"TOMMY","peso":10318,"contentores":469,"gaiola":8,"qtrat":3,"ano":2023,"mes":6},{"data":"2023-06-07","mercado":"CHILE","variedade":"TOMMY","peso":10560,"contentores":480,"gaiola":8,"qtrat":3,"ano":2023,"mes":6},{"data":"2023-06-07","mercado":"URUGUAI","variedade":"TOMMY","peso":14256,"contentores":648,"gaiola":11,"qtrat":4,"ano":2023,"mes":6},{"data":"2023-06-12","mercado":"ARGENTINA","variedade":"TOMMY","peso":23760,"contentores":1080,"gaiola":18,"qtrat":6,"ano":2023,"mes":6},{"data":"2023-06-13","mercado":"ARGENTINA","variedade":"TOMMY","peso":7920,"contentores":360,"gaiola":6,"qtrat":2,"ano":2023,"mes":6},{"data":"2023-06-13","mercado":"CHILE","variedade":"TOMMY","peso":23760,"contentores":1080,"gaiola":18,"qtrat":6,"ano":2023,"mes":6},{"data":"2023-06-14","mercado":"CHILE","variedade":"TOMMY","peso":27720,"contentores":1260,"gaiola":21,"qtrat":7,"ano":2023,"mes":6},{"data":"2023-06-15","mercado":"CHILE","variedade":"TOMMY","peso":15686,"contentores":713,"gaiola":12,"qtrat":4,"ano":2023,"mes":6},{"data":"2023-06-19","mercado":"CHILE","variedade":"TOMMY","peso":23760,"contentores":1080,"gaiola":18,"qtrat":6,"ano":2023,"mes":6},{"data":"2023-06-20","mercado":"CHILE","variedade":"TOMMY","peso":19800,"contentores":900,"gaiola":15,"qtrat":5,"ano":2023,"mes":6},{"data":"2023-06-20","mercado":"URUGUAI","variedade":"TOMMY","peso":3960,"contentores":180,"gaiola":3,"qtrat":1,"ano":2023,"mes":6},{"data":"2023-06-21","mercado":"URUGUAI","variedade":"TOMMY","peso":6160,"contentores":280,"gaiola":5,"qtrat":2,"ano":2023,"mes":6},{"data":"2023-06-21","mercado":"CHILE","variedade":"TOMMY","peso":15840,"contentores":720,"gaiola":12,"qtrat":4,"ano":2023,"mes":6},{"data":"2023-06-22","mercado":"CHILE","variedade":"TOMMY","peso":15840,"contentores":720,"gaiola":12,"qtrat":4,"ano":2023,"mes":6},{"data":"2023-06-23","mercado":"CHILE","variedade":"TOMMY","peso":11880,"contentores":540,"gaiola":9,"qtrat":3,"ano":2023,"mes":6},{"data":"2023-06-26","mercado":"CHILE","variedade":"TOMMY","peso":19800,"contentores":900,"gaiola":15,"qtrat":5,"ano":2023,"mes":6},{"data":"2023-06-27","mercado":"CHILE","variedade":"TOMMY","peso":15840,"contentores":720,"gaiola":12,"qtrat":4,"ano":2023,"mes":6},{"data":"2023-06-28","mercado":"CHILE","variedade":"TOMMY","peso":7326,"contentores":333,"gaiola":6,"qtrat":2,"ano":2023,"mes":6},{"data":"2023-06-29","mercado":"CHILE","variedade":"TOMMY","peso":23122,"contentores":1051,"gaiola":18,"qtrat":6,"ano":2023,"mes":6},{"data":"2023-06-30","mercado":"CHILE","variedade":"TOMMY","peso":1320,"contentores":60,"gaiola":1,"qtrat":1,"ano":2023,"mes":6},{"data":"2023-07-03","mercado":"CHILE","variedade":"TOMMY","peso":3960,"contentores":180,"gaiola":3,"qtrat":1,"ano":2023,"mes":7},{"data":"2023-07-11","mercado":"CHILE","variedade":"TOMMY","peso":31196,"contentores":1418,"gaiola":24,"qtrat":8,"ano":2023,"mes":7},{"data":"2023-07-12","mercado":"ARGENTINA","variedade":"PALMER","peso":30360,"contentores":1380,"gaiola":23,"qtrat":8,"ano":2023,"mes":7},{"data":"2023-07-13","mercado":"CHILE","variedade":"TOMMY","peso":18700,"contentores":850,"gaiola":14,"qtrat":5,"ano":2023,"mes":7},{"data":"2023-07-14","mercado":"CHILE","variedade":"TOMMY","peso":16654,"contentores":757,"gaiola":13,"qtrat":5,"ano":2023,"mes":7},{"data":"2023-07-14","mercado":"ARGENTINA","variedade":"PALMER","peso":3960,"contentores":180,"gaiola":3,"qtrat":1,"ano":2023,"mes":7},{"data":"2023-07-17","mercado":"CHILE","variedade":"TOMMY","peso":23760,"contentores":1080,"gaiola":18,"qtrat":6,"ano":2023,"mes":7},{"data":"2023-07-18","mercado":"URUGUAI","variedade":"TOMMY","peso":11330,"contentores":515,"gaiola":9,"qtrat":3,"ano":2023,"mes":7},{"data":"2023-07-19","mercado":"CHILE","variedade":"TOMMY","peso":27720,"contentores":1260,"gaiola":21,"qtrat":7,"ano":2023,"mes":7},{"data":"2023-07-20","mercado":"CHILE","variedade":"TOMMY","peso":19800,"contentores":900,"gaiola":15,"qtrat":5,"ano":2023,"mes":7},{"data":"2023-07-21","mercado":"CHILE","variedade":"TOMMY","peso":1980,"contentores":90,"gaiola":1,"qtrat":1,"ano":2023,"mes":7},{"data":"2023-07-21","mercado":"ARGENTINA","variedade":"PALMER","peso":31680,"contentores":1440,"gaiola":24,"qtrat":8,"ano":2023,"mes":7},{"data":"2023-07-24","mercado":"ARGENTINA","variedade":"PALMER","peso":2640,"contentores":120,"gaiola":2,"qtrat":1,"ano":2023,"mes":7},{"data":"2023-07-24","mercado":"CHILE","variedade":"TOMMY","peso":7920,"contentores":360,"gaiola":6,"qtrat":2,"ano":2023,"mes":7},{"data":"2023-07-25","mercado":"CHILE","variedade":"TOMMY","peso":2640,"contentores":120,"gaiola":2,"qtrat":1,"ano":2023,"mes":7},{"data":"2023-07-25","mercado":"ARGENTINA","variedade":"TOMMY","peso":17160,"contentores":780,"gaiola":13,"qtrat":5,"ano":2023,"mes":7},{"data":"2023-07-26","mercado":"ARGENTINA","variedade":"TOMMY","peso":7326,"contentores":333,"gaiola":6,"qtrat":2,"ano":2023,"mes":7},{"data":"2023-07-26","mercado":"CHILE","variedade":"TOMMY","peso":2640,"contentores":120,"gaiola":2,"qtrat":1,"ano":2023,"mes":7},{"data":"2023-07-31","mercado":"ARGENTINA","variedade":"PALMER","peso":19800,"contentores":900,"gaiola":15,"qtrat":5,"ano":2023,"mes":7},{"data":"2023-08-01","mercado":"AFRICA DO SUL","variedade":"TOMMY","peso":66,"contentores":3,"gaiola":1,"qtrat":1,"ano":2023,"mes":8},{"data":"2023-08-01","mercado":"ARGENTINA","variedade":"PALMER","peso":10340,"contentores":470,"gaiola":8,"qtrat":3,"ano":2023,"mes":8},{"data":"2023-08-01","mercado":"CHILE","variedade":"TOMMY","peso":6468,"contentores":294,"gaiola":5,"qtrat":2,"ano":2023,"mes":8},{"data":"2023-08-02","mercado":"ARGENTINA","variedade":"PALMER","peso":9570,"contentores":435,"gaiola":8,"qtrat":3,"ano":2023,"mes":8},{"data":"2023-08-02","mercado":"CHILE","variedade":"TOMMY","peso":7920,"contentores":360,"gaiola":6,"qtrat":2,"ano":2023,"mes":8},{"data":"2023-08-14","mercado":"CHILE","variedade":"TOMMY","peso":43406,"contentores":1973,"gaiola":33,"qtrat":11,"ano":2023,"mes":8},{"data":"2023-08-14","mercado":"URUGUAI","variedade":"TOMMY","peso":11880,"contentores":540,"gaiola":9,"qtrat":3,"ano":2023,"mes":8},{"data":"2023-08-17","mercado":"AFRICA DO SUL","variedade":"TOMMY","peso":27720,"contentores":1260,"gaiola":21,"qtrat":7,"ano":2023,"mes":8},{"data":"2023-08-18","mercado":"ARGENTINA","variedade":"TOMMY","peso":27720,"contentores":1260,"gaiola":21,"qtrat":7,"ano":2023,"mes":8},{"data":"2023-08-24","mercado":"ESTADOS UNIDOS","variedade":"ATAULFO","peso":33198,"contentores":1509,"gaiola":26,"qtrat":9,"ano":2023,"mes":8},{"data":"2023-08-29","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":15840,"contentores":720,"gaiola":12,"qtrat":4,"ano":2023,"mes":8},{"data":"2023-08-30","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":19800,"contentores":900,"gaiola":15,"qtrat":5,"ano":2023,"mes":8},{"data":"2023-08-31","mercado":"AFRICA DO SUL","variedade":"PALMER","peso":3960,"contentores":180,"gaiola":3,"qtrat":1,"ano":2023,"mes":8},{"data":"2023-09-05","mercado":"CHILE","variedade":"TOMMY","peso":19800,"contentores":900,"gaiola":15,"qtrat":5,"ano":2023,"mes":9},{"data":"2023-09-07","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":19800,"contentores":900,"gaiola":15,"qtrat":5,"ano":2023,"mes":9},{"data":"2023-09-13","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":19800,"contentores":900,"gaiola":15,"qtrat":5,"ano":2023,"mes":9},{"data":"2023-09-14","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":23760,"contentores":1080,"gaiola":18,"qtrat":6,"ano":2023,"mes":9},{"data":"2023-09-19","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":15840,"contentores":720,"gaiola":12,"qtrat":4,"ano":2023,"mes":9},{"data":"2023-09-26","mercado":"AFRICA DO SUL","variedade":"TOMMY","peso":19800,"contentores":900,"gaiola":15,"qtrat":5,"ano":2023,"mes":9},{"data":"2023-09-27","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":23760,"contentores":1080,"gaiola":18,"qtrat":6,"ano":2023,"mes":9},{"data":"2023-09-28","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":27720,"contentores":1260,"gaiola":21,"qtrat":7,"ano":2023,"mes":9},{"data":"2023-09-29","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":19800,"contentores":900,"gaiola":15,"qtrat":5,"ano":2023,"mes":9},{"data":"2023-10-03","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":23760,"contentores":1080,"gaiola":18,"qtrat":6,"ano":2023,"mes":10},{"data":"2023-10-04","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":23760,"contentores":1080,"gaiola":18,"qtrat":6,"ano":2023,"mes":10},{"data":"2023-10-09","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":27720,"contentores":1260,"gaiola":21,"qtrat":7,"ano":2023,"mes":10},{"data":"2023-10-17","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":19800,"contentores":900,"gaiola":15,"qtrat":5,"ano":2023,"mes":10},{"data":"2023-10-18","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":19800,"contentores":900,"gaiola":15,"qtrat":5,"ano":2023,"mes":10},{"data":"2023-10-19","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":23760,"contentores":1080,"gaiola":18,"qtrat":6,"ano":2023,"mes":10},{"data":"2023-10-24","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":23760,"contentores":1080,"gaiola":18,"qtrat":6,"ano":2023,"mes":10},{"data":"2023-10-30","mercado":"CHILE","variedade":"TOMMY","peso":15752,"contentores":716,"gaiola":12,"qtrat":4,"ano":2023,"mes":10},{"data":"2023-11-07","mercado":"CHILE","variedade":"TOMMY","peso":35640,"contentores":1620,"gaiola":27,"qtrat":9,"ano":2023,"mes":11},{"data":"2023-11-08","mercado":"CHILE","variedade":"TOMMY","peso":27720,"contentores":1260,"gaiola":21,"qtrat":7,"ano":2023,"mes":11},{"data":"2023-11-09","mercado":"CHILE","variedade":"TOMMY","peso":31020,"contentores":1410,"gaiola":24,"qtrat":8,"ano":2023,"mes":11},{"data":"2023-11-13","mercado":"URUGUAI","variedade":"TOMMY","peso":13200,"contentores":600,"gaiola":10,"qtrat":4,"ano":2023,"mes":11},{"data":"2023-11-24","mercado":"CHILE","variedade":"TOMMY","peso":35640,"contentores":1620,"gaiola":27,"qtrat":9,"ano":2023,"mes":11},{"data":"2023-11-29","mercado":"URUGUAI","variedade":"PALMER","peso":9240,"contentores":420,"gaiola":7,"qtrat":3,"ano":2023,"mes":11},{"data":"2024-03-05","mercado":"ARGENTINA","variedade":"TOMMY","peso":7920,"contentores":360,"gaiola":6,"qtrat":2,"ano":2024,"mes":3},{"data":"2024-03-13","mercado":"CHILE","variedade":"TOMMY","peso":23760,"contentores":1080,"gaiola":18,"qtrat":6,"ano":2024,"mes":3},{"data":"2024-03-26","mercado":"CHILE","variedade":"TOMMY","peso":31680,"contentores":1440,"gaiola":24,"qtrat":8,"ano":2024,"mes":3},{"data":"2024-04-09","mercado":"CHILE","variedade":"TOMMY","peso":27720,"contentores":1260,"gaiola":21,"qtrat":7,"ano":2024,"mes":4},{"data":"2024-04-17","mercado":"CHILE","variedade":"TOMMY","peso":15840,"contentores":720,"gaiola":12,"qtrat":4,"ano":2024,"mes":4},{"data":"2024-04-23","mercado":"CHILE","variedade":"TOMMY","peso":31680,"contentores":1440,"gaiola":24,"qtrat":8,"ano":2024,"mes":4},{"data":"2024-05-07","mercado":"ARGENTINA","variedade":"TOMMY","peso":22154,"contentores":1007,"gaiola":16,"qtrat":6,"ano":2024,"mes":5},{"data":"2024-06-11","mercado":"ARGENTINA","variedade":"KEITT","peso":11880,"contentores":540,"gaiola":9,"qtrat":3,"ano":2024,"mes":6},{"data":"2024-06-11","mercado":"CHILE","variedade":"KEITT","peso":7920,"contentores":360,"gaiola":6,"qtrat":2,"ano":2024,"mes":6},{"data":"2024-06-13","mercado":"ARGENTINA","variedade":"KEITT","peso":14806,"contentores":673,"gaiola":12,"qtrat":4,"ano":2024,"mes":6},{"data":"2024-06-20","mercado":"CHILE","variedade":"KEITT","peso":15840,"contentores":720,"gaiola":12,"qtrat":4,"ano":2024,"mes":6},{"data":"2024-07-02","mercado":"ARGENTINA","variedade":"PALMER","peso":21648,"contentores":984,"gaiola":17,"qtrat":6,"ano":2024,"mes":7},{"data":"2024-07-16","mercado":"ARGENTINA","variedade":"TOMMY","peso":29480,"contentores":1340,"gaiola":23,"qtrat":8,"ano":2024,"mes":7},{"data":"2024-07-30","mercado":"ARGENTINA","variedade":"TOMMY","peso":27720,"contentores":1260,"gaiola":21,"qtrat":7,"ano":2024,"mes":7},{"data":"2024-07-31","mercado":"CHILE","variedade":"TOMMY","peso":27720,"contentores":1260,"gaiola":21,"qtrat":7,"ano":2024,"mes":7},{"data":"2024-08-09","mercado":"ARGENTINA","variedade":"TOMMY","peso":35640,"contentores":1620,"gaiola":27,"qtrat":9,"ano":2024,"mes":8},{"data":"2024-08-21","mercado":"CHILE","variedade":"TOMMY","peso":39600,"contentores":1800,"gaiola":30,"qtrat":10,"ano":2024,"mes":8},{"data":"2024-08-28","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":19800,"contentores":900,"gaiola":15,"qtrat":5,"ano":2024,"mes":8},{"data":"2024-08-29","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":9438,"contentores":429,"gaiola":8,"qtrat":3,"ano":2024,"mes":8},{"data":"2024-09-03","mercado":"CHILE","variedade":"TOMMY","peso":34320,"contentores":1560,"gaiola":26,"qtrat":9,"ano":2024,"mes":9},{"data":"2024-09-05","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":27720,"contentores":1260,"gaiola":21,"qtrat":7,"ano":2024,"mes":9},{"data":"2024-09-19","mercado":"ARGENTINA","variedade":"TOMMY","peso":38280,"contentores":1740,"gaiola":29,"qtrat":10,"ano":2024,"mes":9},{"data":"2024-09-24","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":51480,"contentores":2340,"gaiola":39,"qtrat":13,"ano":2024,"mes":9},{"data":"2024-09-27","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":55440,"contentores":2520,"gaiola":42,"qtrat":14,"ano":2024,"mes":9},{"data":"2024-10-01","mercado":"ARGENTINA","variedade":"TOMMY","peso":23760,"contentores":1080,"gaiola":18,"qtrat":6,"ano":2024,"mes":10},{"data":"2024-10-15","mercado":"ARGENTINA","variedade":"TOMMY","peso":35640,"contentores":1620,"gaiola":27,"qtrat":9,"ano":2024,"mes":10},{"data":"2024-10-24","mercado":"CHILE","variedade":"TOMMY","peso":27720,"contentores":1260,"gaiola":21,"qtrat":7,"ano":2024,"mes":10},{"data":"2024-11-06","mercado":"ARGENTINA","variedade":"TOMMY","peso":19800,"contentores":900,"gaiola":15,"qtrat":5,"ano":2024,"mes":11},{"data":"2024-11-13","mercado":"ARGENTINA","variedade":"TOMMY","peso":36014,"contentores":1637,"gaiola":28,"qtrat":10,"ano":2024,"mes":11},{"data":"2024-11-19","mercado":"ARGENTINA","variedade":"TOMMY","peso":31680,"contentores":1440,"gaiola":24,"qtrat":8,"ano":2024,"mes":11},{"data":"2024-12-11","mercado":"CHILE","variedade":"TOMMY","peso":30822,"contentores":1401,"gaiola":24,"qtrat":8,"ano":2024,"mes":12},{"data":"2025-02-27","mercado":"ARGENTINA","variedade":"PALMER","peso":39116,"contentores":1778,"gaiola":30,"qtrat":10,"ano":2025,"mes":2},{"data":"2025-03-05","mercado":"ARGENTINA","variedade":"PALMER","peso":35640,"contentores":1620,"gaiola":27,"qtrat":9,"ano":2025,"mes":3},{"data":"2025-03-13","mercado":"ARGENTINA","variedade":"PALMER","peso":35640,"contentores":1620,"gaiola":27,"qtrat":9,"ano":2025,"mes":3},{"data":"2025-03-26","mercado":"ARGENTINA","variedade":"TOMMY","peso":23760,"contentores":1080,"gaiola":18,"qtrat":6,"ano":2025,"mes":3},{"data":"2025-04-08","mercado":"ARGENTINA","variedade":"TOMMY","peso":61842,"contentores":2811,"gaiola":47,"qtrat":16,"ano":2025,"mes":4},{"data":"2025-04-14","mercado":"ARGENTINA","variedade":"TOMMY","peso":55440,"contentores":2520,"gaiola":42,"qtrat":14,"ano":2025,"mes":4},{"data":"2025-04-15","mercado":"ARGENTINA","variedade":"TOMMY","peso":42174,"contentores":1917,"gaiola":32,"qtrat":11,"ano":2025,"mes":4},{"data":"2025-05-08","mercado":"ARGENTINA","variedade":"PALMER","peso":13200,"contentores":600,"gaiola":10,"qtrat":4,"ano":2025,"mes":5},{"data":"2025-05-13","mercado":"ARGENTINA","variedade":"TOMMY","peso":13860,"contentores":630,"gaiola":11,"qtrat":4,"ano":2025,"mes":5},{"data":"2025-06-17","mercado":"CHILE","variedade":"TOMMY","peso":28688,"contentores":1304,"gaiola":22,"qtrat":9,"ano":2025,"mes":6},{"data":"2025-06-17","mercado":"CHILE","variedade":"ATAULFO","peso":9240,"contentores":420,"gaiola":7,"qtrat":3,"ano":2025,"mes":6},{"data":"2025-06-25","mercado":"CHILE","variedade":"ATAULFO","peso":18194,"contentores":827,"gaiola":14,"qtrat":5,"ano":2025,"mes":6},{"data":"2025-06-27","mercado":"CHILE","variedade":"TOMMY","peso":27720,"contentores":1260,"gaiola":21,"qtrat":7,"ano":2025,"mes":6},{"data":"2025-07-02","mercado":"CHILE","variedade":"TOMMY","peso":27720,"contentores":1260,"gaiola":21,"qtrat":7,"ano":2025,"mes":7},{"data":"2025-07-09","mercado":"CHILE","variedade":"TOMMY","peso":27720,"contentores":1260,"gaiola":21,"qtrat":7,"ano":2025,"mes":7},{"data":"2025-07-09","mercado":"ARGENTINA","variedade":"TOMMY","peso":27720,"contentores":1260,"gaiola":21,"qtrat":7,"ano":2025,"mes":7},{"data":"2025-08-20","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":44928,"contentores":1872,"gaiola":32,"qtrat":11,"ano":2025,"mes":8},{"data":"2025-08-21","mercado":"CHILE","variedade":"PALMER","peso":27720,"contentores":1260,"gaiola":21,"qtrat":7,"ano":2025,"mes":8},{"data":"2025-08-21","mercado":"ARGENTINA","variedade":"PALMER","peso":29590,"contentores":1345,"gaiola":23,"qtrat":8,"ano":2025,"mes":8},{"data":"2025-08-25","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":34560,"contentores":1440,"gaiola":24,"qtrat":8,"ano":2025,"mes":8},{"data":"2025-08-27","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":35208,"contentores":1467,"gaiola":25,"qtrat":9,"ano":2025,"mes":8},{"data":"2025-09-04","mercado":"CHILE","variedade":"PALMER","peso":27720,"contentores":1260,"gaiola":21,"qtrat":7,"ano":2025,"mes":9},{"data":"2025-09-09","mercado":"CHILE","variedade":"PALMER","peso":23760,"contentores":1080,"gaiola":18,"qtrat":6,"ano":2025,"mes":9},{"data":"2025-09-15","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":47520,"contentores":1980,"gaiola":33,"qtrat":11,"ano":2025,"mes":9},{"data":"2025-09-16","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":60480,"contentores":2520,"gaiola":42,"qtrat":14,"ano":2025,"mes":9},{"data":"2025-09-17","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":51840,"contentores":2160,"gaiola":36,"qtrat":12,"ano":2025,"mes":9},{"data":"2025-09-22","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":60480,"contentores":2520,"gaiola":42,"qtrat":14,"ano":2025,"mes":9},{"data":"2025-09-23","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":60480,"contentores":2520,"gaiola":42,"qtrat":14,"ano":2025,"mes":9},{"data":"2025-09-29","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":38640,"contentores":1610,"gaiola":27,"qtrat":9,"ano":2025,"mes":9},{"data":"2025-10-02","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":38880,"contentores":1620,"gaiola":27,"qtrat":9,"ano":2025,"mes":10},{"data":"2025-10-03","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":43200,"contentores":1800,"gaiola":30,"qtrat":10,"ano":2025,"mes":10},{"data":"2025-10-06","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":34560,"contentores":1440,"gaiola":24,"qtrat":8,"ano":2025,"mes":10},{"data":"2025-10-07","mercado":"ESTADOS UNIDOS","variedade":"TOMMY","peso":30240,"contentores":1260,"gaiola":21,"qtrat":7,"ano":2025,"mes":10},{"data":"2025-10-08","mercado":"ARGENTINA","variedade":"TOMMY","peso":30756,"contentores":1398,"gaiola":24,"qtrat":8,"ano":2025,"mes":10},{"data":"2025-10-09","mercado":"ARGENTINA","variedade":"TOMMY","peso":26928,"contentores":1224,"gaiola":21,"qtrat":7,"ano":2025,"mes":10},{"data":"2025-10-28","mercado":"ARGENTINA","variedade":"TOMMY","peso":21120,"contentores":960,"gaiola":16,"qtrat":6,"ano":2025,"mes":10},{"data":"2025-11-05","mercado":"ARGENTINA","variedade":"TOMMY","peso":11132,"contentores":506,"gaiola":6,"qtrat":3,"ano":2025,"mes":11},{"data":"2025-11-05","mercado":"AFRICA DO SUL","variedade":"TOMMY","peso":9240,"contentores":420,"gaiola":7,"qtrat":3,"ano":2025,"mes":11},{"data":"2025-12-09","mercado":"URUGUAI","variedade":"TOMMY","peso":18480,"contentores":840,"gaiola":14,"qtrat":5,"ano":2025,"mes":12},{"data":"2026-01-28","mercado":"URUGUAI","variedade":"TOMMY","peso":18480,"contentores":840,"gaiola":14,"qtrat":5,"ano":2026,"mes":1},{"data":"2026-02-11","mercado":"ARGENTINA","variedade":"TOMMY","peso":21450,"contentores":975,"gaiola":17,"qtrat":6,"ano":2026,"mes":2},{"data":"2026-02-27","mercado":"ARGENTINA","variedade":"TOMMY","peso":22440,"contentores":1020,"gaiola":17,"qtrat":6,"ano":2026,"mes":2},{"data":"2026-03-10","mercado":"ARGENTINA","variedade":"TOMMY","peso":60676,"contentores":2758,"gaiola":46,"qtrat":16,"ano":2026,"mes":3},{"data":"2026-03-17","mercado":"ARGENTINA","variedade":"TOMMY","peso":31680,"contentores":1440,"gaiola":24,"qtrat":8,"ano":2026,"mes":3},{"data":"2026-03-18","mercado":"ARGENTINA","variedade":"TOMMY","peso":36718,"contentores":1669,"gaiola":28,"qtrat":10,"ano":2026,"mes":3},{"data":"2026-03-23","mercado":"CHILE","variedade":"PALMER","peso":30360,"contentores":1380,"gaiola":23,"qtrat":8,"ano":2026,"mes":3},{"data":"2026-03-31","mercado":"CHILE","variedade":"PALMER","peso":23760,"contentores":1080,"gaiola":18,"qtrat":6,"ano":2026,"mes":3},{"data":"2026-04-07","mercado":"ARGENTINA","variedade":"PALMER","peso":22440,"contentores":1020,"gaiola":17,"qtrat":6,"ano":2026,"mes":4},{"data":"2026-04-08","mercado":"CHILE","variedade":"PALMER","peso":22440,"contentores":1020,"gaiola":17,"qtrat":6,"ano":2026,"mes":4},{"data":"2026-04-14","mercado":"ARGENTINA","variedade":"TOMMY","peso":27720,"contentores":1260,"gaiola":21,"qtrat":7,"ano":2026,"mes":4},{"data":"2026-04-15","mercado":"URUGUAI","variedade":"TOMMY","peso":11880,"contentores":540,"gaiola":9,"qtrat":3,"ano":2026,"mes":4},{"data":"2026-04-16","mercado":"CHILE","variedade":"PALMER","peso":21120,"contentores":960,"gaiola":16,"qtrat":6,"ano":2026,"mes":4},{"data":"2026-04-17","mercado":"CHILE","variedade":"TOMMY","peso":11880,"contentores":540,"gaiola":9,"qtrat":3,"ano":2026,"mes":4}];
+
+let DB=[];
+const charts={};
+
+function N(n){if(n>=1e6)return(n/1e6).toFixed(2).replace('.',',')+' M';if(n>=1e3)return(n/1e3).toFixed(1).replace('.',',')+' k';return n.toLocaleString('pt-BR')}
+function NF(n){return n.toLocaleString('pt-BR')}
+function save(){try{localStorage.setItem('tht_v2',JSON.stringify(DB))}catch(e){}}
+function load(){try{const s=localStorage.getItem('tht_v2');DB=s?JSON.parse(s):[...SEED]}catch(e){DB=[...SEED]}}
+
+function filt(o={}){return DB.filter(d=>(!o.ano||d.ano==o.ano)&&(!o.variedade||d.variedade===o.variedade)&&(!o.mercado||d.mercado===o.mercado))}
+function sumBy(arr,key){const m={};arr.forEach(d=>{m[d[key]]=(m[d[key]]||0)+d.peso});return m}
+function anos(){return[...new Set(DB.map(d=>d.ano))].sort()}
+function vars(){return[...new Set(DB.map(d=>d.variedade))].sort()}
+function mercs(){return[...new Set(DB.map(d=>d.mercado))].sort()}
+
+function sel(id,opts,lab='Todos'){
+  const el=document.getElementById(id);if(!el)return;
+  const prev=el.value;
+  el.innerHTML=`<option value="">${lab}</option>`+opts.map(o=>`<option value="${o}">${o}</option>`).join('');
+  if(opts.map(String).includes(String(prev)))el.value=prev;
+}
+
+function mkC(id,type,labels,datasets,opts={}){
+  if(charts[id])charts[id].destroy();
+  const el=document.getElementById(id);if(!el)return;
+  const wrap=el.parentElement;
+  if(opts.dyn)wrap.style.height=Math.max(labels.length*46+70,180)+'px';
+  const fontCfg={family:'DM Sans',size:11};
+  charts[id]=new Chart(el,{type,data:{labels,datasets},options:{
+    responsive:true,maintainAspectRatio:false,
+    indexAxis:opts.h?'y':'x',
+    plugins:{
+      legend:{display:!!opts.leg,position:opts.legPos||'top',labels:{boxWidth:11,font:fontCfg,color:'#6b6b5a',padding:12}},
+      tooltip:{titleFont:{family:'DM Sans'},bodyFont:{family:'DM Sans'},callbacks:{
+        label:ctx=>{const v=opts.h?ctx.parsed.x:ctx.parsed.y;return typeof v==='number'?' '+NF(Math.round(v))+' kg':' '+v}
+      }}
+    },
+    scales:{
+      x:{stacked:!!opts.stk,grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:fontCfg,color:'#6b6b5a',autoSkip:false,maxRotation:opts.h?0:30,callback:v=>typeof v==='number'?N(v):v}},
+      y:{stacked:!!opts.stk,grid:{color:'rgba(0,0,0,0.04)'},ticks:{font:fontCfg,color:'#6b6b5a',callback:v=>typeof v==='number'?N(v):v}}
+    }
+  }});
+}
+
+function kpis(id,items){
+  const el=document.getElementById(id);if(!el)return;
+  el.innerHTML=items.map(i=>`<div class="kpi ${i.a?'accent':''}">
+    <div class="kpi-label">${i.l}</div>
+    <div class="kpi-value">${i.v}<span class="kpi-unit">${i.u||''}</span></div>
+    ${i.s?`<div class="kpi-sub">${i.s}</div>`:''}
+    ${i.tag?`<div class="kpi-tag ${i.tag.c||''}">${i.tag.t}</div>`:''}
+  </div>`).join('');
+}
+
+// ─── OVERVIEW ───
+function renderOverview(){
+  const total=DB.reduce((s,d)=>s+d.peso,0);
+  document.getElementById('ov-total').textContent=N(total);
+  document.getElementById('ov-reg').textContent=DB.length;
+  const anoList=anos();
+  const byAno={}; anoList.forEach(a=>byAno[a]=DB.filter(d=>d.ano==a).reduce((s,d)=>s+d.peso,0));
+  const byVar=sumBy(DB,'variedade');
+  const byMerc=sumBy(DB,'mercado');
+  const bestA=anoList.reduce((a,b)=>byAno[a]>byAno[b]?a:b,anoList[0]);
+  const bestV=Object.entries(byVar).sort((a,b)=>b[1]-a[1])[0];
+  const bestM=Object.entries(byMerc).sort((a,b)=>b[1]-a[1])[0];
+  kpis('ov-kpis',[
+    {l:'Volume Total',v:N(total),u:' kg',s:'Todas as safras'},
+    {l:'Melhor Safra',v:bestA,s:N(byAno[bestA])+' kg',a:true,tag:{t:'↑ pico histórico'}},
+    {l:'Var. Dominante',v:bestV?bestV[0]:'-',s:bestV?(bestV[1]/total*100).toFixed(1)+'% do volume':''},
+    {l:'Mercado Líder',v:bestM?bestM[0].split(' ')[0]:'-',s:bestM?N(bestM[1])+' kg':''},
+    {l:'Pico Mensal',v:'Setembro',s:N(DB.filter(d=>d.mes===9).reduce((s,d)=>s+d.peso,0))+' kg'},
+  ]);
+  mkC('c-ov-ano','bar',anoList.map(String),[{label:'kg',data:anoList.map(a=>byAno[a]||0),backgroundColor:anoList.map((_,i)=>YC[i%4]+'cc'),borderColor:anoList.map((_,i)=>YC[i%4]),borderWidth:2,borderRadius:8}]);
+  const vkeys=Object.keys(byVar);
+  mkC('c-ov-var','doughnut',vkeys,[{data:vkeys.map(v=>byVar[v]),backgroundColor:vkeys.map(v=>VC[v]||'#888'),borderWidth:2,borderColor:'#fff'}],{leg:true,legPos:'right'});
+  if(charts['c-ov-var']){charts['c-ov-var'].options.plugins.tooltip.callbacks.label=ctx=>' '+ctx.label+': '+N(ctx.parsed)+' kg';charts['c-ov-var'].update()}
+  const mkeys=mercs();
+  mkC('c-ov-merc','bar',mkeys,[{label:'kg',data:mkeys.map(m=>byMerc[m]||0),backgroundColor:mkeys.map(m=>(MC[m]||'#888')+'cc'),borderColor:mkeys.map(m=>MC[m]||'#888'),borderWidth:1.5,borderRadius:6}],{h:true,dyn:true});
+  mkC('c-ov-saz','bar',MESES,[{label:'kg',data:Array.from({length:12},(_,i)=>DB.filter(d=>d.mes===i+1).reduce((s,d)=>s+d.peso,0)),backgroundColor:'#1a3a2acc',borderColor:'#1a3a2a',borderWidth:1.5,borderRadius:5}]);
+}
+
+// ─── MENSAL ───
+function renderMensal(){
+  const ano=document.getElementById('f-mes-ano')?.value;
+  const variedade=document.getElementById('f-mes-var')?.value;
+  const mercado=document.getElementById('f-mes-merc')?.value;
+  const d=filt({ano,variedade,mercado});
+  const byM=m=>d.filter(r=>r.mes===m).reduce((s,r)=>s+r.peso,0);
+  const anoList=anos();
+  let datasets,leg=document.getElementById('leg-mensal');
+  if(!ano){
+    datasets=anoList.map((a,i)=>({label:String(a),data:Array.from({length:12},(_,m)=>d.filter(r=>r.ano==a&&r.mes===m+1).reduce((s,r)=>s+r.peso,0)),backgroundColor:YC[i]+'99',borderColor:YC[i],borderWidth:1.5,borderRadius:4}));
+    leg.innerHTML=anoList.map((a,i)=>`<span class="leg-item"><span class="leg-dot" style="background:${YC[i]}"></span>${a}</span>`).join('');
+  }else{
+    datasets=[{label:ano,data:Array.from({length:12},(_,m)=>byM(m+1)),backgroundColor:'#1a3a2acc',borderColor:'#1a3a2a',borderWidth:1.5,borderRadius:5}];
+    leg.innerHTML='';
+  }
+  mkC('c-mensal','bar',MESES,datasets,{leg:!ano});
+  const vals=Array.from({length:12},(_,m)=>byM(m+1));
+  const total=d.reduce((s,r)=>s+r.peso,0);
+  const pico=MESES[vals.indexOf(Math.max(...vals))];
+  kpis('kpi-mensal',[
+    {l:'Volume filtrado',v:N(total),u:' kg'},{l:'Registros',v:d.length},
+    {l:'Pico no período',v:pico,s:N(Math.max(...vals))+' kg'},{l:'Meses com produção',v:vals.filter(v=>v>0).length},
+  ]);
+}
+
+// ─── ANUAL ───
+function renderAnual(){
+  const variedade=document.getElementById('f-ano-var2')?.value;
+  const d=filt({variedade});
+  const anoList=anos();
+  const vList=vars();
+  const byA={}; anoList.forEach(a=>byA[a]=d.filter(r=>r.ano==a).reduce((s,r)=>s+r.peso,0));
+  const best=anoList.reduce((a,b)=>(byA[a]||0)>(byA[b]||0)?a:b,anoList[0]);
+  kpis('kpi-anual',anoList.map(a=>({l:'Safra '+a,v:N(byA[a]||0),u:' kg',tag:a==best?{t:'↑ melhor safra'}:null})));
+  mkC('c-anual-bar','bar',anoList.map(String),[{label:'kg',data:anoList.map(a=>byA[a]||0),backgroundColor:anoList.map((_,i)=>YC[i]+'cc'),borderColor:anoList.map((_,i)=>YC[i]),borderWidth:2,borderRadius:8}]);
+  const stackDs=vList.map(v=>({label:v,data:anoList.map(a=>d.filter(r=>r.ano==a&&r.variedade==v).reduce((s,r)=>s+r.peso,0)),backgroundColor:(VC[v]||'#888')+'cc',borderColor:VC[v]||'#888',borderWidth:1,borderRadius:3}));
+  mkC('c-anual-stack','bar',anoList.map(String),stackDs,{stk:true,leg:true});
+  document.getElementById('leg-anual').innerHTML=vList.map(v=>`<span class="leg-item"><span class="leg-dot" style="background:${VC[v]||'#888'}"></span>${v}</span>`).join('');
+}
+
+// ─── VARIEDADE ───
+function renderVar(){
+  const ano=document.getElementById('f-var-ano')?.value;
+  const mercado=document.getElementById('f-var-merc')?.value;
+  const d=filt({ano,mercado});
+  const vList=vars();
+  const qt=sumBy(d,'variedade');
+  const total=Object.values(qt).reduce((s,v)=>s+v,0);
+  const sorted=vList.map(v=>({v,q:qt[v]||0})).sort((a,b)=>b.q-a.q);
+  mkC('c-var','bar',sorted.map(x=>x.v),[{label:'kg',data:sorted.map(x=>x.q),backgroundColor:sorted.map(x=>(VC[x.v]||'#888')+'cc'),borderColor:sorted.map(x=>VC[x.v]||'#888'),borderWidth:1.5,borderRadius:5}],{h:true,dyn:true});
+  const vkeys=Object.keys(qt);
+  mkC('c-var-donut','doughnut',vkeys,[{data:vkeys.map(v=>qt[v]),backgroundColor:vkeys.map(v=>VC[v]||'#888'),borderWidth:2,borderColor:'#fff'}],{leg:true,legPos:'bottom'});
+  if(charts['c-var-donut']){charts['c-var-donut'].options.plugins.tooltip.callbacks.label=ctx=>{const pct=total?(ctx.parsed/total*100).toFixed(1):'0';return' '+ctx.label+': '+pct+'%'};charts['c-var-donut'].update()}
+  const anoList=anos();
+  const evolDs=vList.map(v=>({label:v,data:anoList.map(a=>DB.filter(d=>d.variedade==v&&d.ano==a).reduce((s,d)=>s+d.peso,0)),borderColor:VC[v]||'#888',backgroundColor:(VC[v]||'#888')+'22',tension:.4,fill:false,pointRadius:3,borderWidth:2}));
+  mkC('c-var-evol','line',anoList.map(String),evolDs,{leg:true});
+  kpis('kpi-var',sorted.map(x=>({l:x.v,v:N(x.q),u:' kg',s:total?(x.q/total*100).toFixed(1)+'%':'0%'})));
+}
+
+// ─── MERCADO ───
+function renderMerc(){
+  const ano=document.getElementById('f-merc-ano')?.value;
+  const variedade=document.getElementById('f-merc-var2')?.value;
+  const d=filt({ano,variedade});
+  const mList=mercs();
+  const qt=sumBy(d,'mercado');
+  const total=Object.values(qt).reduce((s,v)=>s+v,0);
+  const sorted=mList.map(m=>({m,q:qt[m]||0})).sort((a,b)=>b.q-a.q);
+  mkC('c-merc','bar',sorted.map(x=>x.m),[{label:'kg',data:sorted.map(x=>x.q),backgroundColor:sorted.map(x=>(MC[x.m]||'#888')+'cc'),borderColor:sorted.map(x=>MC[x.m]||'#888'),borderWidth:1.5,borderRadius:5}],{h:true,dyn:true});
+  const anoList=anos();
+  const anualDs=anoList.map((a,i)=>({label:String(a),data:mList.map(m=>DB.filter(d=>d.mercado==m&&d.ano==a).reduce((s,d)=>s+d.peso,0)),backgroundColor:YC[i]+'99',borderColor:YC[i],borderWidth:1.5,borderRadius:3}));
+  mkC('c-merc-anual','bar',mList,anualDs,{leg:true});
+  document.getElementById('leg-merc').innerHTML=anoList.map((a,i)=>`<span class="leg-item"><span class="leg-dot" style="background:${YC[i]}"></span>${a}</span>`).join('');
+  mkC('c-merc-donut','doughnut',mList,[{data:mList.map(m=>qt[m]||0),backgroundColor:mList.map(m=>MC[m]||'#888'),borderWidth:2,borderColor:'#fff'}],{leg:true,legPos:'bottom'});
+  if(charts['c-merc-donut']){charts['c-merc-donut'].options.plugins.tooltip.callbacks.label=ctx=>{const pct=total?(ctx.parsed/total*100).toFixed(1):'0';return' '+ctx.label+': '+pct+'%'};charts['c-merc-donut'].update()}
+  kpis('kpi-merc',sorted.map(x=>({l:x.m.split(' ')[0],v:N(x.q),u:' kg',s:total?(x.q/total*100).toFixed(1)+'%':'0%'})));
+}
+
+// ─── TABELA ───
+function renderTabela(){
+  const q=(document.getElementById('tab-search')?.value||'').toLowerCase();
+  const ano=document.getElementById('f-tab-ano')?.value;
+  const variedade=document.getElementById('f-tab-var')?.value;
+  const mercado=document.getElementById('f-tab-merc')?.value;
+  const d=filt({ano,variedade,mercado}).filter(r=>!q||r.data.includes(q)||r.variedade.toLowerCase().includes(q)||r.mercado.toLowerCase().includes(q));
+  document.getElementById('tab-info').textContent=`${d.length} registros · ${N(d.reduce((s,r)=>s+r.peso,0))} kg`;
+  const vClass={TOMMY:'tommy',PALMER:'palmer',ATAULFO:'ataulfo',KEITT:'keitt',KENT:'kent'};
+  document.getElementById('tab-body').innerHTML=d.slice(0,300).map(r=>{
+    const idx=DB.indexOf(r);
+    return`<tr><td>${r.data}</td><td><span class="badge b-${vClass[r.variedade]||'mkt'}">${r.variedade}</span></td><td><span class="badge b-mkt">${r.mercado}</span></td><td>${NF(r.peso)}</td><td>${NF(r.contentores||0)}</td><td>${NF(r.gaiola||0)}</td><td>${NF(r.qtrat||0)}</td><td><button class="del-btn" onclick="delR(${idx})">✕</button></td></tr>`;
+  }).join('')+(d.length>300?`<tr><td colspan="8" style="text-align:center;color:#aaa;font-size:12px;padding:14px">Mostrando 300 de ${d.length}. Use filtros para refinar.</td></tr>`:'');
+}
+function delR(i){if(!confirm('Excluir registro?'))return;DB.splice(i,1);save();boot()}
+
+// ─── FORM ───
+document.getElementById('in-var').addEventListener('change',function(){document.getElementById('fvc').style.display=this.value==='__c'?'flex':'none'});
+document.getElementById('in-merc').addEventListener('change',function(){document.getElementById('fmc').style.display=this.value==='__c'?'flex':'none'});
+function addRecord(){
+  const data=document.getElementById('in-data').value;
+  let v=document.getElementById('in-var').value;if(v==='__c')v=document.getElementById('in-var-c').value.trim().toUpperCase();
+  let m=document.getElementById('in-merc').value;if(m==='__c')m=document.getElementById('in-merc-c').value.trim().toUpperCase();
+  const p=+document.getElementById('in-peso').value;
+  const msg=document.getElementById('form-msg');
+  if(!data||!v||!m||!p){msg.className='msg err';msg.textContent='⚠ Preencha data, variedade, mercado e peso.';return}
+  const dd=new Date(data);
+  DB.push({data,mercado:m,variedade:v,peso:p,contentores:+(document.getElementById('in-cont').value)||0,gaiola:+(document.getElementById('in-gaio').value)||0,qtrat:+(document.getElementById('in-qtrat').value)||0,ano:dd.getFullYear(),mes:dd.getMonth()+1});
+  save();boot();
+  msg.className='msg ok';msg.textContent='✓ Adicionado com sucesso!';
+  setTimeout(()=>msg.className='msg',2500);
+  ['in-peso','in-cont','in-gaio','in-qtrat'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});
+}
+function clearForm(){['in-data','in-peso','in-cont','in-gaio','in-qtrat','in-var-c','in-merc-c'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=''});document.getElementById('form-msg').className='msg'}
+function importCSV(){
+  const text=document.getElementById('csv-input').value.trim();
+  const msg=document.getElementById('csv-msg');
+  if(!text){msg.className='msg err';msg.textContent='Cole os dados antes de importar.';return}
+  let added=0,err=0;
+  text.split('\n').filter(l=>l.trim()).forEach(line=>{
+    const p=line.split(',').map(s=>s.trim());
+    if(p.length<4){err++;return}
+    const[data,variedade,mercado,pesoS,...rest]=p;
+    const peso=+pesoS;
+    if(!data||!variedade||!mercado||!peso){err++;return}
+    const dd=new Date(data);
+    DB.push({data,mercado:mercado.toUpperCase(),variedade:variedade.toUpperCase(),peso,contentores:+(rest[0]||0),gaiola:+(rest[1]||0),qtrat:+(rest[2]||0),ano:dd.getFullYear(),mes:dd.getMonth()+1});
+    added++;
+  });
+  save();boot();
+  msg.className=added?'msg ok':'msg err';
+  msg.textContent=added?`✓ ${added} linha(s) importada(s)${err?` · ${err} ignorada(s)`:''}`:` ⚠ Nenhuma linha válida.`;
+  setTimeout(()=>msg.className='msg',3000);
+  document.getElementById('csv-input').value='';
+}
+function exportCSV(){
+  const h='data,variedade,mercado,peso,contentores,gaiolas,qtrat\n';
+  const rows=DB.map(r=>`${r.data},${r.variedade},${r.mercado},${r.peso},${r.contentores||0},${r.gaiola||0},${r.qtrat||0}`).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([h+rows],{type:'text/csv'}));a.download='THT_producao.csv';a.click();
+}
+
+// ─── NAVIGATION ───
+const PT={overview:'Visão Geral',mensal:'Análise Mensal',anual:'Comparativo Anual',variedade:'Por Variedade',mercado:'Por Mercado',dados:'Inserir Dados',tabela:'Todos os Registros'};
+function goPage(name,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  el.classList.add('active');
+  document.getElementById('topbar-title').textContent=PT[name]||name;
+  if(name==='mensal')renderMensal();
+  if(name==='anual')renderAnual();
+  if(name==='variedade')renderVar();
+  if(name==='mercado')renderMerc();
+  if(name==='tabela')renderTabela();
+}
+function updateFilters(){
+  const a=anos(),v=vars(),m=mercs();
+  sel('f-mes-ano',a,'Todos os anos');sel('f-mes-var',v,'Todas as variedades');sel('f-mes-merc',m,'Todos os mercados');
+  sel('f-ano-var2',v,'Todas as variedades');
+  sel('f-var-ano',a,'Todos os anos');sel('f-var-merc',m,'Todos os mercados');
+  sel('f-merc-ano',a,'Todos os anos');sel('f-merc-var2',v,'Todas as variedades');
+  sel('f-tab-ano',a,'Todos os anos');sel('f-tab-var',v,'Todas as variedades');sel('f-tab-merc',m,'Todos os mercados');
+  document.getElementById('topbar-count').textContent=DB.length+' registros';
+}
+function boot(){
+  updateFilters();renderOverview();
+  const active=document.querySelector('.page.active')?.id?.replace('page-','');
+  if(active==='mensal')renderMensal();
+  if(active==='anual')renderAnual();
+  if(active==='variedade')renderVar();
+  if(active==='mercado')renderMerc();
+  if(active==='tabela')renderTabela();
+}
+load();boot();
+</script>
+</body>
+</html>
